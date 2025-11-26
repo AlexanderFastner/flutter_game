@@ -60,6 +60,15 @@ flutter run -d <device-id>
 flutter run -d emulator-5554
 ```
 
+#### Option B: Run on my phone
+```bash
+flutter run -d R5CR20NQRZL #My phone USB
+
+adb tcpip 5555
+adb connect 192.168.1.185:5555 #my phone over WIFI (check ip)
+flutter run -d R5CR20NQRZL
+```
+
 #### Option B: Run and let Flutter choose a device
 ```bash
 flutter run

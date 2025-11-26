@@ -310,16 +310,16 @@ class _GameScreenState extends State<GameScreen>
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  void _onTapDown(TapDownDetails details) {
+  void _onPointerDown(PointerDownEvent event) {
     if (isGameOver) return;
 
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    final Offset localPosition = box.globalToLocal(details.globalPosition);
-    final double screenWidth = MediaQuery.of(context).size.width;
+    final double currentWidth =
+        screenWidth > 0 ? screenWidth : MediaQuery.of(context).size.width;
+    final double tapX = event.localPosition.dx;
 
     setState(() {
       // If tap is on left half of screen, swap left car between lanes 0 and 1
-      if (localPosition.dx < screenWidth / 2) {
+      if (tapX < currentWidth / 2) {
         leftCarLane = leftCarLane == 0 ? 1 : 0;
       }
       // If tap is on right half of screen, swap right car between lanes 2 and 3
@@ -343,8 +343,9 @@ class _GameScreenState extends State<GameScreen>
           },
         ),
       ),
-      body: GestureDetector(
-        onTapDown: _onTapDown,
+      body: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: _onPointerDown,
         child: Container(
           decoration: BoxDecoration(
             color: Colors.grey.shade900,
@@ -392,7 +393,7 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     );
                   }).toList(),
-                  // Left car (square)
+                  // Left car (square) - Neon light blue
                   Positioned(
                     left: leftCarLane * laneWidth + laneWidth * 0.1,
                     top: screenHeight * 0.8,
@@ -400,16 +401,23 @@ class _GameScreenState extends State<GameScreen>
                       width: laneWidth * 0.8,
                       height: laneWidth * 0.8,
                       decoration: BoxDecoration(
-                        color: Colors.blue,
+                        color: const Color(0xFF00D9FF), // Neon light blue
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: Colors.blue.shade300,
+                          color: const Color(0xFF00FFFF), // Brighter neon blue for border
                           width: 2,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00D9FF).withOpacity(0.8),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  // Right car (square)
+                  // Right car (square) - Neon pink
                   Positioned(
                     left: rightCarLane * laneWidth + laneWidth * 0.1,
                     top: screenHeight * 0.8,
@@ -417,12 +425,19 @@ class _GameScreenState extends State<GameScreen>
                       width: laneWidth * 0.8,
                       height: laneWidth * 0.8,
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: const Color(0xFFFF1493), // Neon pink
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: Colors.red.shade300,
+                          color: const Color(0xFFFF00FF), // Brighter neon pink for border
                           width: 2,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF1493).withOpacity(0.8),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
                     ),
                   ),
