@@ -47,9 +47,58 @@ class _GameScreenState extends State<GameScreen>
   double screenHeight = 0;
   
   // Game parameters
-  double obstacleSpeed = 2.0; // pixels per frame
   double obstacleSpawnRate = 0.02; // probability per frame
   double obstacleSize = 40.0;
+  
+  // Get base speed and max speed based on difficulty
+  double get _baseSpeed {
+    switch (widget.difficulty) {
+      case 'Easy':
+        return 2.0;
+      case 'Medium':
+        return 4.0;
+      case 'Hard':
+        return 6.0;
+      default:
+        return 2.0;
+    }
+  }
+  
+  double get _maxSpeed {
+    switch (widget.difficulty) {
+      case 'Easy':
+        return 6.0;
+      case 'Medium':
+        return 8.0;
+      case 'Hard':
+        return 10.0;
+      default:
+        return 8.0;
+    }
+  }
+  
+  int get _maxScoreForSpeedIncrease {
+    switch (widget.difficulty) {
+      case 'Easy':
+        return 100;
+      case 'Medium':
+        return 100;
+      case 'Hard':
+        return 1000;
+      default:
+        return 100;
+    }
+  }
+  
+  // Calculate current obstacle speed based on score and difficulty
+  double get obstacleSpeed {
+    if (score >= _maxScoreForSpeedIncrease) {
+      return _maxSpeed;
+    }
+    // Linear interpolation: baseSpeed + (maxSpeed - baseSpeed) * (score / maxScore)
+    return _baseSpeed + 
+           (_maxSpeed - _baseSpeed) * (score / _maxScoreForSpeedIncrease);
+  }
 
   @override
   void initState() {
@@ -426,9 +475,9 @@ class TrianglePainter extends CustomPainter {
 
     final path = Path();
     // Draw triangle pointing down
-    path.moveTo(size.width / 2, 0); // Top point
-    path.lineTo(0, size.height); // Bottom left
-    path.lineTo(size.width, size.height); // Bottom right
+    path.moveTo(size.width / 2, size.height); // Bottom point (tip)
+    path.lineTo(0, 0); // Top left
+    path.lineTo(size.width, 0); // Top right
     path.close();
 
     canvas.drawPath(path, paint);
