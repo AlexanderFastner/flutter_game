@@ -103,21 +103,15 @@ While the app is running, you can use hot reload to see changes instantly:
 flutter run -d android
 ```
 
-#### iOS (macOS only)
-```bash
-flutter run -d ios
-```
-
 #### Web
 ```bash
 flutter run -d chrome
 ```
 
-#### Desktop (Linux/Windows/macOS)
+#### Desktop (Linux/Windows)
 ```bash
 flutter run -d linux    # For Linux
 flutter run -d windows  # For Windows
-flutter run -d macos    # For macOS
 ```
 
 ## Development Tips
@@ -135,25 +129,8 @@ The game screen (`lib/screens/game_screen.dart`) is currently a placeholder. You
 3. Add game assets (images, sounds) to an `assets/` folder
 4. Implement game mechanics based on the selected difficulty and map
 
-## Troubleshooting
-
-### If `flutter pub get` fails:
-- Ensure you have an active internet connection
-- Check that your Flutter SDK is up to date: `flutter upgrade`
-
-### If no devices are found:
-- Start an Android emulator from Android Studio
-- Start an iOS simulator from Xcode (macOS only)
-- Connect a physical device via USB and enable USB debugging
-
-### If the app doesn't run:
-- Check for errors in the terminal output
-- Ensure all dependencies are installed: `flutter pub get`
-- Try cleaning the build: `flutter clean && flutter pub get`
-
 ## Resources
 
 - [Flutter Documentation](https://flutter.dev/docs)
 - [Flutter Cookbook](https://flutter.dev/docs/cookbook)
 - [Dart Language Tour](https://dart.dev/guides/language/language-tour)
-
