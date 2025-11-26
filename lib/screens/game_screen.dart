@@ -38,6 +38,7 @@ class _GameScreenState extends State<GameScreen>
   List<Obstacle> obstacles = [];
   bool isGameOver = false;
   bool isPaused = false;
+  int score = 0;
   late AnimationController _animationController;
   final Random _random = Random();
   
@@ -181,7 +182,9 @@ class _GameScreenState extends State<GameScreen>
         obstacle.y += obstacleSpeed;
       });
 
-      // Remove obstacles that are off screen
+      // Count and remove obstacles that made it to the bottom (increment score)
+      final int obstaclesPassed = obstacles.where((obstacle) => obstacle.y > screenHeight).length;
+      score += obstaclesPassed;
       obstacles.removeWhere((obstacle) => obstacle.y > screenHeight);
 
       // Check for collisions
@@ -235,6 +238,7 @@ class _GameScreenState extends State<GameScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => GameOverScreen(
+        score: score,
         onRestart: _restartGame,
         onMainMenu: _goToMainMenu,
       ),
@@ -249,6 +253,7 @@ class _GameScreenState extends State<GameScreen>
       rightCarLane = 2;
       isGameOver = false;
       isPaused = false;
+      score = 0;
     });
   }
 
@@ -368,6 +373,32 @@ class _GameScreenState extends State<GameScreen>
                         border: Border.all(
                           color: Colors.red.shade300,
                           width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Score display (top center)
+                  Positioned(
+                    top: 20,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Score: $score',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),

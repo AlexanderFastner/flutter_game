@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class GameOverScreen extends StatelessWidget {
+  final int score;
   final VoidCallback onRestart;
   final VoidCallback onMainMenu;
 
   const GameOverScreen({
     super.key,
+    required this.score,
     required this.onRestart,
     required this.onMainMenu,
   });
@@ -39,6 +41,15 @@ class GameOverScreen extends StatelessWidget {
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Score: $score',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white70,
               ),
             ),
             const SizedBox(height: 32),
