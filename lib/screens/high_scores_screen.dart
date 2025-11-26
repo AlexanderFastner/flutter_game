@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/high_score_service.dart';
+import '../services/theme_service.dart';
+import '../widgets/themed_background.dart';
 
 class HighScoresScreen extends StatefulWidget {
   const HighScoresScreen({super.key});
@@ -15,11 +17,22 @@ class _HighScoresScreenState extends State<HighScoresScreen>
   final HighScoreService _service = HighScoreService.instance;
   final Map<String, List<int>> _scores = {};
   bool _isLoading = true;
+  final ThemeService _themeService = ThemeService.instance;
+  String _themeId = AppThemeIds.neoTokyoSkyline;
 
   @override
   void initState() {
     super.initState();
+    _loadTheme();
     _loadScores();
+  }
+
+  Future<void> _loadTheme() async {
+    final themeId = await _themeService.getCurrentThemeId();
+    if (!mounted) return;
+    setState(() {
+      _themeId = themeId;
+    });
   }
 
   Future<void> _loadScores() async {
@@ -41,44 +54,95 @@ class _HighScoresScreenState extends State<HighScoresScreen>
     return DefaultTabController(
       length: difficulties.length,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('High Scores'),
-          backgroundColor: Colors.blue.shade900,
-          foregroundColor: Colors.white,
-          bottom: TabBar(
-            labelStyle: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+        body: buildThemedBackground(
+          _themeId,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ShaderMask(
+                          shaderCallback: (Rect bounds) {
+                            return const LinearGradient(
+                              colors: [
+                                Color(0xFFFF00A8),
+                                Color(0xFFFFA800),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds);
+                          },
+                          child: const Text(
+                            'High Scores',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48), // balance row visually
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: TabBar(
+                    labelStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    labelColor: const Color(0xFFFFA800),
+                    unselectedLabelColor: Colors.white70,
+                    indicator: const UnderlineTabIndicator(
+                      borderSide: BorderSide(
+                        color: Color(0xFFFFA800),
+                        width: 3,
+                      ),
+                    ),
+                    tabs: difficulties
+                        .map((difficulty) => Tab(text: difficulty))
+                        .toList(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : TabBarView(
+                          children: difficulties
+                              .map((difficulty) => _ScoresList(
+                                    difficulty: difficulty,
+                                    scores: _scores[difficulty] ?? const [],
+                                    onRefresh: _loadScores,
+                                  ))
+                              .toList(),
+                        ),
+                ),
+              ],
             ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-            labelColor: Colors.orange.shade300,
-            unselectedLabelColor: Colors.white70,
-            indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(
-                color: Colors.orange.shade300,
-                width: 4,
-              ),
-              insets: const EdgeInsets.symmetric(horizontal: 24),
-            ),
-            tabs: difficulties
-                .map((difficulty) => Tab(text: difficulty))
-                .toList(),
           ),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
-                children: difficulties
-                    .map((difficulty) => _ScoresList(
-                          difficulty: difficulty,
-                          scores: _scores[difficulty] ?? const [],
-                          onRefresh: _loadScores,
-                        ))
-                    .toList(),
-              ),
       ),
     );
   }

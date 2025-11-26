@@ -498,7 +498,7 @@ class _GameScreenState extends State<GameScreen>
                             color: const Color(0xFF00D9FF).withOpacity(0.8),
                             blurRadius: 8,
                             spreadRadius: 2,
-                          ),
+        ),
                         ],
                       ),
                     ),
@@ -510,7 +510,7 @@ class _GameScreenState extends State<GameScreen>
                     child: Container(
                       width: carWidth,
                       height: carHeight,
-                      decoration: BoxDecoration(
+        decoration: BoxDecoration(
                         color: const Color(0xFFFF1493), // Neon pink
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
@@ -523,16 +523,16 @@ class _GameScreenState extends State<GameScreen>
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
-                        ],
-                      ),
-                    ),
+            ],
+          ),
+        ),
                   ),
                   // Score display (top center)
                   Positioned(
                     top: safeTop + 16,
                     left: 0,
                     right: 0,
-                    child: Center(
+        child: Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -541,15 +541,15 @@ class _GameScreenState extends State<GameScreen>
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(20),
-                        ),
+              ),
                         child: Text(
                           'Score: $score',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                             color: Colors.white,
-                          ),
-                        ),
+                ),
+              ),
                       ),
                     ),
                   ),
@@ -570,8 +570,8 @@ class _GameScreenState extends State<GameScreen>
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                      ),
-                    ),
+                ),
+              ),
                   ),
                   if (isImmune)
                     Positioned(
@@ -592,7 +592,7 @@ class _GameScreenState extends State<GameScreen>
                             Icon(
                               Icons.auto_awesome,
                               color: Colors.amber.shade300,
-                            ),
+              ),
                             const SizedBox(width: 8),
                             Text(
                               '${immunityTimeLeft.toStringAsFixed(1)}s',
@@ -600,9 +600,9 @@ class _GameScreenState extends State<GameScreen>
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                              ),
-                            ),
-                          ],
+                ),
+              ),
+            ],
                         ),
                       ),
                     ),

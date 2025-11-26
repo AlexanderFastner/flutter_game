@@ -50,12 +50,14 @@ List all available devices (emulators, simulators, or physical devices):
 
 ```bash
 flutter devices
+flutter emulators
 ```
 
 ### 4. Run the App
 
 #### Option A: Run on a specific device
 ```bash
+flutter emulators --launch S21ish
 flutter run -d <device-id>
 flutter run -d emulator-5554
 ```
