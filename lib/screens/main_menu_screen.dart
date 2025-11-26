@@ -24,7 +24,7 @@ class MainMenuScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                'Flutter Game',
+                'Neon Escape',
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,

@@ -7,11 +7,13 @@ class Obstacle {
   int lane; // 0, 1, 2, or 3
   double y; // Vertical position
   double size;
+  bool isStar;
 
   Obstacle({
     required this.lane,
     required this.y,
     required this.size,
+    this.isStar = false,
   });
 }
 
@@ -38,6 +40,11 @@ class _GameScreenState extends State<GameScreen>
   bool isGameOver = false;
   bool isPaused = false;
   int score = 0;
+  int powerUpsCollected = 0;
+  bool isImmune = false;
+  double immunityTimeLeft = 0.0; // seconds
+  DateTime? _immunityEndTime;
+  static const Duration _immunityDuration = Duration(seconds: 5);
   late AnimationController _animationController;
   final Random _random = Random();
   final HighScoreService _highScoreService = HighScoreService.instance;
@@ -49,6 +56,7 @@ class _GameScreenState extends State<GameScreen>
   // Game parameters
   double obstacleSpawnRate = 0.02; // probability per frame
   double obstacleSize = 40.0;
+  double starSpawnChance = 0.05; // reduced chance for star powerups
 
   // Lane dash animation
   List<double> laneDashOffsets = List.filled(4, 0.0);
@@ -86,26 +94,26 @@ class _GameScreenState extends State<GameScreen>
   double get _baseSpeed {
     switch (widget.difficulty) {
       case 'Easy':
-        return 2.0;
-      case 'Medium':
         return 4.0;
-      case 'Hard':
+      case 'Medium':
         return 6.0;
+      case 'Hard':
+        return 8.0;
       default:
-        return 2.0;
+        return 4.0;
     }
   }
   
   double get _maxSpeed {
     switch (widget.difficulty) {
       case 'Easy':
-        return 6.0;
+        return 8.0;
       case 'Medium':
-        return 8.0;
-      case 'Hard':
         return 10.0;
+      case 'Hard':
+        return 12.0;
       default:
-        return 8.0;
+        return 10.0;
     }
   }
   
@@ -247,10 +255,12 @@ class _GameScreenState extends State<GameScreen>
         
         for (int lane in lanes) {
           if (_canSpawnInLane(lane)) {
+            final bool spawnStar = _random.nextDouble() < starSpawnChance;
             obstacles.add(Obstacle(
               lane: lane,
               y: -obstacleSize,
               size: obstacleSize,
+              isStar: spawnStar,
             ));
             break; // Spawned successfully, exit loop
           }
@@ -270,12 +280,33 @@ class _GameScreenState extends State<GameScreen>
           .toList();
 
       // Count and remove obstacles that made it to the bottom (increment score)
-      final int obstaclesPassed = obstacles.where((obstacle) => obstacle.y > screenHeight).length;
-      score += obstaclesPassed;
-      obstacles.removeWhere((obstacle) => obstacle.y > screenHeight);
+      int trianglesPassed = 0;
+      obstacles.removeWhere((obstacle) {
+        if (obstacle.y > screenHeight) {
+          if (!obstacle.isStar) {
+            trianglesPassed++;
+          }
+          return true;
+        }
+        return false;
+      });
+      score += trianglesPassed;
 
       // Check for collisions
       _checkCollisions();
+
+      // Update immunity timer
+      if (isImmune && _immunityEndTime != null) {
+        final remaining =
+            _immunityEndTime!.difference(DateTime.now()).inMilliseconds / 1000;
+        if (remaining <= 0) {
+          isImmune = false;
+          immunityTimeLeft = 0;
+          _immunityEndTime = null;
+        } else {
+          immunityTimeLeft = remaining;
+        }
+      }
     });
   }
 
@@ -283,34 +314,52 @@ class _GameScreenState extends State<GameScreen>
     if (isGameOver || screenWidth == 0 || screenHeight == 0) return;
 
     final double laneWidth = screenWidth / 4;
-    final double carY = screenHeight * 0.8;
-    final double carSize = laneWidth * 0.8;
+    final double carHeight = laneWidth * 1.1;
+    final double carY = screenHeight * 0.78;
+    final double carBottom = carY + carHeight;
 
-    for (var obstacle in obstacles) {
-      // Check collision with left car
-      if (obstacle.lane == leftCarLane) {
-        final double obstacleBottom = obstacle.y + obstacle.size;
-        final double carTop = carY;
-        final double carBottom = carY + carSize;
+    for (int i = obstacles.length - 1; i >= 0; i--) {
+      final obstacle = obstacles[i];
 
-        if (obstacleBottom >= carTop && obstacle.y <= carBottom) {
-          _endGame();
-          return;
-        }
-      }
+      bool collidedWithLeft =
+          obstacle.lane == leftCarLane &&
+          _isOverlap(obstacle.y, obstacle.y + obstacle.size, carY, carBottom);
 
-      // Check collision with right car
-      if (obstacle.lane == rightCarLane) {
-        final double obstacleBottom = obstacle.y + obstacle.size;
-        final double carTop = carY;
-        final double carBottom = carY + carSize;
+      bool collidedWithRight =
+          obstacle.lane == rightCarLane &&
+          _isOverlap(obstacle.y, obstacle.y + obstacle.size, carY, carBottom);
 
-        if (obstacleBottom >= carTop && obstacle.y <= carBottom) {
-          _endGame();
-          return;
+      if (collidedWithLeft || collidedWithRight) {
+        if (obstacle.isStar) {
+          powerUpsCollected++;
+          obstacles.removeAt(i);
+          _activateImmunity();
+        } else {
+          if (isImmune) {
+            score += 2;
+            obstacles.removeAt(i);
+          } else {
+            _endGame();
+            return;
+          }
         }
       }
     }
+  }
+
+  bool _isOverlap(
+    double aStart,
+    double aEnd,
+    double bStart,
+    double bEnd,
+  ) {
+    return aEnd >= bStart && aStart <= bEnd;
+  }
+
+  void _activateImmunity() {
+    isImmune = true;
+    _immunityEndTime = DateTime.now().add(_immunityDuration);
+    immunityTimeLeft = _immunityDuration.inSeconds.toDouble();
   }
 
   Future<void> _endGame() async {
@@ -343,6 +392,10 @@ class _GameScreenState extends State<GameScreen>
       isPaused = false;
       score = 0;
       laneDashOffsets = List.filled(4, 0.0);
+      powerUpsCollected = 0;
+      isImmune = false;
+      immunityTimeLeft = 0;
+      _immunityEndTime = null;
     });
   }
 
@@ -385,7 +438,10 @@ class _GameScreenState extends State<GameScreen>
               final double safeTop = MediaQuery.of(context).padding.top;
               
               final double laneWidth = constraints.maxWidth / 4;
-              
+              final double carWidth = laneWidth * 0.7;
+              final double carHeight = laneWidth * 1.1;
+              final double carTop = screenHeight * 0.78;
+
               return Stack(
                 children: [
                   // Draw lanes and animated dashed dividers
@@ -403,26 +459,33 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     ),
                   ),
-                  // Draw obstacles (triangles)
+                  // Draw obstacles (triangles / stars)
                   ...obstacles.map((obstacle) {
+                    final triangleColor = isImmune
+                        ? Colors.red.shade400
+                        : Colors.orange.shade400;
                     return Positioned(
                       left: obstacle.lane * laneWidth + (laneWidth - obstacle.size) / 2,
                       top: obstacle.y,
                       child: CustomPaint(
                         size: Size(obstacle.size, obstacle.size),
-                        painter: TrianglePainter(
-                          color: Colors.orange.shade400,
-                        ),
+                        painter: obstacle.isStar
+                            ? StarPainter(
+                                color: Colors.amber.shade300,
+                              )
+                            : TrianglePainter(
+                                color: triangleColor,
+                              ),
                       ),
                     );
                   }).toList(),
-                  // Left car (square) - Neon light blue
+                  // Left car (rectangle) - Neon light blue
                   Positioned(
                     left: leftCarLane * laneWidth + laneWidth * 0.1,
-                    top: screenHeight * 0.8,
+                    top: carTop,
                     child: Container(
-                      width: laneWidth * 0.8,
-                      height: laneWidth * 0.8,
+                      width: carWidth,
+                      height: carHeight,
                       decoration: BoxDecoration(
                         color: const Color(0xFF00D9FF), // Neon light blue
                         borderRadius: BorderRadius.circular(4),
@@ -440,13 +503,13 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     ),
                   ),
-                  // Right car (square) - Neon pink
+                  // Right car (rectangle) - Neon pink
                   Positioned(
                     left: rightCarLane * laneWidth + laneWidth * 0.1,
-                    top: screenHeight * 0.8,
+                    top: carTop,
                     child: Container(
-                      width: laneWidth * 0.8,
-                      height: laneWidth * 0.8,
+                      width: carWidth,
+                      height: carHeight,
                       decoration: BoxDecoration(
                         color: const Color(0xFFFF1493), // Neon pink
                         borderRadius: BorderRadius.circular(4),
@@ -510,6 +573,39 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     ),
                   ),
+                  if (isImmune)
+                    Positioned(
+                      top: safeTop + 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.65),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              color: Colors.amber.shade300,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${immunityTimeLeft.toStringAsFixed(1)}s',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               );
             },
@@ -547,6 +643,44 @@ class TrianglePainter extends CustomPainter {
       ..strokeWidth = 2;
 
     canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class StarPainter extends CustomPainter {
+  final Color color;
+
+  StarPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final double halfWidth = size.width / 2;
+    final double halfHeight = size.height / 2;
+    final double top = 0;
+    final double bottom = size.height;
+
+    path
+      ..moveTo(halfWidth, top)
+      ..lineTo(halfWidth * 1.2, halfHeight * 0.7)
+      ..lineTo(size.width, halfHeight * 0.8)
+      ..lineTo(halfWidth * 1.4, halfHeight * 1.1)
+      ..lineTo(halfWidth * 1.5, bottom)
+      ..lineTo(halfWidth, halfHeight * 1.3)
+      ..lineTo(halfWidth * 0.5, bottom)
+      ..lineTo(halfWidth * 0.6, halfHeight * 1.1)
+      ..lineTo(0, halfHeight * 0.8)
+      ..lineTo(halfWidth * 0.8, halfHeight * 0.7)
+      ..close();
+
+    canvas.drawShadow(path, Colors.black, 4, true);
+    canvas.drawPath(path, paint);
   }
 
   @override

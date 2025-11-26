@@ -46,6 +46,23 @@ class _HighScoresScreenState extends State<HighScoresScreen>
           backgroundColor: Colors.blue.shade900,
           foregroundColor: Colors.white,
           bottom: TabBar(
+            labelStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+            labelColor: Colors.orange.shade300,
+            unselectedLabelColor: Colors.white70,
+            indicator: UnderlineTabIndicator(
+              borderSide: BorderSide(
+                color: Colors.orange.shade300,
+                width: 4,
+              ),
+              insets: const EdgeInsets.symmetric(horizontal: 24),
+            ),
             tabs: difficulties
                 .map((difficulty) => Tab(text: difficulty))
                 .toList(),
