@@ -66,18 +66,114 @@ class _GameScreenState extends State<GameScreen>
     super.dispose();
   }
 
+  bool _canSpawnInLane(int lane) {
+    if (screenWidth == 0) return false;
+    
+    final double laneWidth = screenWidth / 4;
+    final double carSize = laneWidth * 0.8;
+    final double requiredSpacing = 2 * carSize; // 2 squares length offset
+    
+    // Check for obstacles in the same lane (prevent overlapping)
+    final double newObstacleTop = -obstacleSize;
+    final double newObstacleBottom = 0; // -obstacleSize + obstacleSize
+    
+    final sameLaneObstacles = obstacles.where((obs) => obs.lane == lane).toList();
+    for (var sameLaneObstacle in sameLaneObstacles) {
+      final double obstacleTop = sameLaneObstacle.y;
+      final double obstacleBottom = sameLaneObstacle.y + sameLaneObstacle.size;
+      
+      // Check if they would overlap
+      if (newObstacleBottom >= obstacleTop && newObstacleTop <= obstacleBottom) {
+        return false; // Would overlap, can't spawn
+      }
+      
+      // Check if there's enough spacing (for same lane, we want at least some spacing)
+      // New obstacle is at the top, so check spacing to obstacles below
+      if (newObstacleBottom < obstacleTop) {
+        final double spacing = obstacleTop - newObstacleBottom;
+        if (spacing < obstacleSize) { // At least one obstacle size of spacing
+          return false; // Not enough spacing
+        }
+      }
+    }
+    
+    // Determine the opposite lane
+    int oppositeLane;
+    if (lane == 0) {
+      oppositeLane = 1;
+    } else if (lane == 1) {
+      oppositeLane = 0;
+    } else if (lane == 2) {
+      oppositeLane = 3;
+    } else if (lane == 3) {
+      oppositeLane = 2;
+    } else {
+      return true; // Invalid lane, but allow spawn
+    }
+    
+    // Check if there are any obstacles in the opposite lane
+    final oppositeLaneObstacles = obstacles.where((obs) => obs.lane == oppositeLane).toList();
+    
+    if (oppositeLaneObstacles.isEmpty) {
+      // No obstacles in opposite lane, can spawn
+      return true;
+    }
+    
+    // Check if the new obstacle has enough spacing from all obstacles in the opposite lane
+    for (var oppositeObstacle in oppositeLaneObstacles) {
+      final double oppositeObstacleTop = oppositeObstacle.y;
+      final double oppositeObstacleBottom = oppositeObstacle.y + oppositeObstacle.size;
+      
+      // Check if there's enough vertical spacing
+      // The new obstacle will be at the top, so we need to check if there's
+      // enough space between newObstacleBottom and oppositeObstacleTop
+      // OR between oppositeObstacleBottom and newObstacleTop
+      
+      // Case 1: New obstacle is above the opposite obstacle
+      if (newObstacleBottom < oppositeObstacleTop) {
+        final double spacing = oppositeObstacleTop - newObstacleBottom;
+        if (spacing < requiredSpacing) {
+          return false; // Not enough spacing
+        }
+      }
+      // Case 2: New obstacle would be below the opposite obstacle
+      // (This shouldn't happen since we spawn at the top, but check anyway)
+      else if (newObstacleTop > oppositeObstacleBottom) {
+        final double spacing = newObstacleTop - oppositeObstacleBottom;
+        if (spacing < requiredSpacing) {
+          return false; // Not enough spacing
+        }
+      }
+      // Case 3: They would overlap vertically (shouldn't happen, but safety check)
+      else {
+        return false; // Would overlap, can't spawn
+      }
+    }
+    
+    return true; // All checks passed
+  }
+
   void _gameLoop() {
     if (isGameOver || isPaused) return;
 
     setState(() {
       // Spawn new obstacles randomly
       if (_random.nextDouble() < obstacleSpawnRate) {
-        int randomLane = _random.nextInt(4);
-        obstacles.add(Obstacle(
-          lane: randomLane,
-          y: -obstacleSize,
-          size: obstacleSize,
-        ));
+        // Try to spawn in a random lane, but respect spacing rules
+        List<int> lanes = [0, 1, 2, 3];
+        lanes.shuffle(_random);
+        
+        for (int lane in lanes) {
+          if (_canSpawnInLane(lane)) {
+            obstacles.add(Obstacle(
+              lane: lane,
+              y: -obstacleSize,
+              size: obstacleSize,
+            ));
+            break; // Spawned successfully, exit loop
+          }
+        }
+        // If no lane was available, skip spawning this frame
       }
 
       // Move obstacles down
