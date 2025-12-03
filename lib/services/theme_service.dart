@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppThemeIds {
   static const String neonRainGlitch = 'neon_rain_glitch';
   static const String neoTokyoSkyline = 'neo_tokyo_skyline';
+  static const String cyberRoad = 'cyber_road';
 }
 
 class ThemeService {

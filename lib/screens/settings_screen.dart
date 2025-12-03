@@ -122,6 +122,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         subtitle:
                             'Futuristic city silhouette with neon accents',
                       ),
+                      _buildThemeOption(
+                        id: AppThemeIds.cyberRoad,
+                        title: 'Cyber Road',
+                        subtitle:
+                            'Curved neon road with northern lights and cityscape',
+                      ),
                     ],
                   ),
                 ),
