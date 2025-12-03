@@ -1,6 +1,4 @@
-# Flutter Game App
-
-A simple Flutter game app framework with a main menu, difficulty/map selection, and game screen.
+# Neon Escape (Two cars inspired)
 
 ## Project Structure
 
@@ -195,3 +193,20 @@ flutter run -d windows  # For Windows
    Your app will be available at:
    - `https://[project-id].web.app`
    - `https://[project-id].firebaseapp.com`
+
+### Updating the Deployed App
+
+To update your app after making code changes, simply redeploy:
+
+**Using deployment script (recommended):**
+```bash
+./deploy.sh        # WSL/Linux/Git Bash
+deploy.bat         # Windows CMD
+.\deploy.ps1       # PowerShell
+```
+
+**Manual update:**
+```bash
+flutter build web --release
+firebase deploy --only hosting
+```
