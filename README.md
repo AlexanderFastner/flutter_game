@@ -8,11 +8,35 @@ A simple Flutter game app framework with a main menu, difficulty/map selection, 
 flutter_game/
 ├── lib/
 │   ├── main.dart                    # App entry point
-│   └── screens/
-│       ├── main_menu_screen.dart    # Main menu with play button
-│       ├── game_setup_screen.dart   # Difficulty and map selection
-│       └── game_screen.dart         # Game screen (placeholder)
+│   ├── screens/
+│   │   ├── main_menu_screen.dart    # Main menu with play button
+│   │   ├── game_setup_screen.dart   # Difficulty and map selection
+│   │   ├── game_screen.dart         # Game screen
+│   │   ├── game_over_screen.dart    # Game over screen
+│   │   ├── high_scores_screen.dart  # High scores display
+│   │   └── settings_screen.dart     # Settings screen
+│   ├── services/
+│   │   ├── high_score_service.dart  # High score management
+│   │   ├── settings_service.dart    # Settings persistence
+│   │   └── theme_service.dart       # Theme management
+│   └── widgets/
+│       ├── aspect_ratio_wrapper.dart # Aspect ratio wrapper widget
+│       └── themed_background.dart   # Themed background widget
+├── web/                             # Web platform files
+│   ├── index.html                   # Web entry point
+│   ├── manifest.json                # Web app manifest
+│   └── icons/                       # Web app icons
+├── android/                         # Android platform files
+├── ios/                             # iOS platform files
+├── windows/                         # Windows platform files
+├── linux/                           # Linux platform files
+├── macos/                           # macOS platform files
+├── test/                            # Test files
 ├── pubspec.yaml                     # Flutter dependencies
+├── firebase.json                    # Firebase Hosting configuration
+├── deploy.sh                        # Deployment script (WSL/Linux)
+├── deploy.bat                       # Deployment script (Windows CMD)
+├── deploy.ps1                       # Deployment script (PowerShell)
 └── README.md                        # This file
 ```
 
@@ -83,22 +107,6 @@ flutter run --debug
 
 ## Testing the App
 
-### Navigation Flow
-
-1. **Main Menu Screen**: 
-   - You'll see a blue gradient background with "Flutter Game" title
-   - Click the "Play" button to proceed
-
-2. **Game Setup Screen**:
-   - Select a difficulty level (Easy, Medium, or Hard)
-   - Select a map (Map 1, Map 2, or Map 3)
-   - Click "Start Game" to launch the game
-
-3. **Game Screen**:
-   - Currently displays the selected difficulty and map
-   - This is a placeholder - you can add your game logic here
-   - Use the back button to return to the setup screen
-
 ### Hot Reload
 
 While the app is running, you can use hot reload to see changes instantly:
@@ -125,23 +133,65 @@ flutter run -d linux    # For Linux
 flutter run -d windows  # For Windows
 ```
 
-## Development Tips
+## Web Deployment to Firebase Hosting
 
-1. **Hot Reload**: Make changes to your code and press `r` in the terminal to see updates instantly
-2. **Debug Mode**: Use `flutter run --debug` for better debugging capabilities
-3. **Release Mode**: Use `flutter run --release` for optimized performance testing
+### Deployment Steps
 
-## Next Steps
+1. **Install Firebase CLI**
+   ```bash
+   npm install -g firebase-tools
+   ```
 
-The game screen (`lib/screens/game_screen.dart`) is currently a placeholder. You can:
+2. **Login to Firebase**
+   ```bash
+   firebase login
+   ```
 
-1. Add your game logic to the `GameScreen` widget
-2. Create game models and controllers
-3. Add game assets (images, sounds) to an `assets/` folder
-4. Implement game mechanics based on the selected difficulty and map
+3. **Build Flutter Web App**
+   ```bash
+   flutter build web
+   ```
 
-## Resources
+4. **Initialize Firebase Hosting**
+   ```bash
+   firebase init hosting
+   ```
+   - Select your Firebase project
+   - Set public directory to `build/web`
+   - Configure as single-page app: **Yes**
+   - Set up automatic builds: **No** (optional)
+   - Don't overwrite existing `index.html`: **No**
 
-- [Flutter Documentation](https://flutter.dev/docs)
-- [Flutter Cookbook](https://flutter.dev/docs/cookbook)
-- [Dart Language Tour](https://dart.dev/guides/language/language-tour)
+5. **Deploy to Firebase**
+
+   **Option A: Use the deployment script (recommended)**
+   
+   For WSL/Linux/Git Bash:
+   ```bash
+   ./deploy.sh
+   ```
+   
+   For Windows Command Prompt:
+   ```cmd
+   deploy.bat
+   ```
+   
+   For Windows PowerShell:
+   ```powershell
+   .\deploy.ps1
+   ```
+   
+   The script will automatically:
+   - Build the Flutter web app (`flutter build web --release`)
+   - Deploy to Firebase Hosting (`firebase deploy --only hosting`)
+   
+   **Option B: Manual deployment**
+   ```bash
+   flutter build web --release
+   firebase deploy --only hosting
+   ```
+
+6. **Access Your App**
+   Your app will be available at:
+   - `https://[project-id].web.app`
+   - `https://[project-id].firebaseapp.com`
